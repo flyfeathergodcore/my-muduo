@@ -1,8 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
-project(mymuduo)
+project(mymuduo LANGUAGES CXX)
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+# 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
-aux_source_directory(. SRC_LIST)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 设置库文件输出目录
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+
+aux_source_directory(src SRC_LIST)
+
 add_library(mymuduo SHARED ${SRC_LIST})
+
+target_include_directories(mymuduo
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include
+)
