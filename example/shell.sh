@@ -38,7 +38,7 @@ sudo ldconfig
 
 cd "$(pwd)/example"
 if [ ! -d "$(pwd)/testserver" ]; then
-    rm -rf "$(pwd)/testserver"
+    make clean
 fi
 
 make
