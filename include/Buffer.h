@@ -79,6 +79,11 @@ public:
         return retrieveAsString(readableBytes());
     }
 
+    void append(const std::string &data)
+    {
+        append(data.data(), data.size());
+    }
+
     void append(const char *data, size_t len)
     {
         ensureWritableBytes(len);
