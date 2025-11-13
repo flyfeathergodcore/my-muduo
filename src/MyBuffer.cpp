@@ -1,10 +1,10 @@
-#include "Buffer.h"
+#include "MyBuffer.h"
 
 #include <errno.h>
 #include <sys/uio.h>
 #include <unistd.h>
 
-ssize_t Buffer::readFd(int fd, int *savedErrno)
+ssize_t mymuduo::MyBuffer::readFd(int fd, int *savedErrno)
 {
     char extrabuf[65536] = {0};
     struct iovec vec[2];
@@ -34,7 +34,7 @@ ssize_t Buffer::readFd(int fd, int *savedErrno)
     return n;
 }
 
-ssize_t Buffer::writeFd(int fd, int *savedErrno)
+ssize_t mymuduo::MyBuffer::writeFd(int fd, int *savedErrno)
 {
     size_t n = readableBytes();
     ssize_t nwritten = ::write(fd, peek(), n);

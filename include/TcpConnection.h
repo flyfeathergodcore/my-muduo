@@ -3,7 +3,8 @@
 #include "InetAddress.h"
 #include "Callback.h"
 #include "Timestamp.h"
-#include "Buffer.h"
+#include "MyBuffer.h"
+#include "Contentbase.h"
 
 #include <memory>
 #include <string>
@@ -34,14 +35,19 @@ public:
     void setCloseCallback(const CloseCallback& cb) { closeCallback_ = cb; }
     void setWriteCompleteCallback(const WriteCompleteCallback& cb) { writeCompleteCallback_ = cb; }
 
-    void send(const std::string& buffer);
+    void send(const std::string& Buffer);
+    void send(const void* data, size_t len);
+    void send(mymuduo::MyBuffer* buf);
+    void send(const mymuduo::MyBuffer& buf);
 
     void shutdown();
-
     void connectEstablished();
     void connectDestroyed();
 
     void setState(int s) { state_ = s; }
+
+    void setContext(std::unique_ptr<Contentbase> content) { content_ = std::move(content); }
+    Contentbase* getContext() const { return content_.get(); }
 
 private:
     void handleRead(Timestamp receiveTime);
@@ -59,6 +65,7 @@ private:
     std::unique_ptr<Channel> channel_;
     std::atomic<int> state_;
     std::atomic<bool> reading_;
+    std::unique_ptr<Contentbase> content_;
 
     const InetAddress localAddr_;
     const InetAddress peerAddr_;
@@ -70,6 +77,6 @@ private:
     HighWaterMarkCallback highWaterMarkCallback_;
     size_t highWaterMark_;
 
-    Buffer inputBuffer_;
-    Buffer outputBuffer_;
+    mymuduo::MyBuffer inputBuffer_;
+    mymuduo::MyBuffer outputBuffer_;
 };

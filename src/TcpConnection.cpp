@@ -112,17 +112,70 @@ void TcpConnection::handleError() {
     }
 }
 
-void TcpConnection::send(const std::string& buffer){
+void TcpConnection::send(const std::string& Buffer){
     if (state_ == kConnected) {
         if (loop_->isInLoopThread()) {
-            sendInLoop(buffer.c_str(), buffer.size());
+            sendInLoop(Buffer.c_str(), Buffer.size());
         } else {
              loop_->runInLoop(std::bind(
                 &TcpConnection::sendInLoop,
                 this,
-                buffer.c_str(),
-                buffer.size()
+                Buffer.c_str(),
+                Buffer.size()
             ));
+        }
+    }
+}
+
+void TcpConnection::send(const void* data, size_t len) {
+    if (state_ == kConnected) {
+        if (loop_->isInLoopThread()) {
+            sendInLoop(data, len);
+        } else {
+             loop_->runInLoop(std::bind(
+                &TcpConnection::sendInLoop,
+                this,
+                data,
+                len
+            ));
+        }
+    }
+}
+
+void TcpConnection::send(const mymuduo::MyBuffer& buf) {
+    if (state_ == kConnected) {
+        if (loop_->isInLoopThread()) {
+            // 直接发送 buf 中的数据
+            sendInLoop(buf.peek(), buf.readableBytes());
+            // 注意：因为 buf 是 const 引用，我们不能在这里修改它（如调用 retrieveAll）
+            // 清空缓冲区的责任交给调用方，或者在发送后由调用方自行处理
+        } else {
+            // 同样，需要拷贝一份数据到 lambda 中，以保证线程安全
+            std::string data(buf.peek(), buf.readableBytes());
+            loop_->runInLoop(std::bind(
+                &TcpConnection::sendInLoop,
+                this,
+                data.c_str(),
+                data.size()
+            ));
+        }
+    }
+}
+
+void TcpConnection::send(mymuduo::MyBuffer* buf) {
+    if (state_ == kConnected) {
+        if (loop_->isInLoopThread()) {
+            sendInLoop(buf->peek(), buf->readableBytes());
+            buf->retrieveAll();
+        } else {
+             std::string data(buf->peek(), buf->readableBytes());
+             loop_->runInLoop(std::bind(
+                &TcpConnection::sendInLoop,
+                this,
+                data.c_str(),
+                data.size()
+            ));
+             buf->retrieveAll();
         }
     }
 }

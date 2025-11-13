@@ -28,7 +28,7 @@ private:
         }
     }
 
-    void onMessage(const TcpConnectionPtr &conn, Buffer *buf,
+    void onMessage(const TcpConnectionPtr &conn, mymuduo::MyBuffer *buf,
                    Timestamp receiveTime) {
         std::string msg(buf->retrieveAllAsString());
         LOG_INFO("Received %ld bytes from %s at %s", msg.size(),

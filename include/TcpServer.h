@@ -7,7 +7,7 @@
 #include "EventLoopThreadPool.h"
 #include "Callback.h"
 #include "TcpConnection.h"
-#include "Buffer.h"
+#include "MyBuffer.h"
 
 #include <memory>
 #include <functional>
@@ -32,25 +32,13 @@ public:
 
     void start();
 
-    void setThreadInitCallback(const ThreadInitCallback& cb)
-    {
-        threadInitCallback_ = cb;
-    }
+    void setThreadInitCallback(const ThreadInitCallback& cb){threadInitCallback_ = cb;}
 
-    void setConnectionCallback(const ConnectionCallback& cb)
-    {
-        connectionCallback_ = cb;
-    }
+    void setConnectionCallback(const ConnectionCallback& cb){connectionCallback_ = cb;}
 
-    void setMessageCallback(const MessageCallback& cb)
-    {
-        messageCallback_ = cb;
-    }
+    void setMessageCallback(const MessageCallback& cb){messageCallback_ = cb;}
 
-    void setWriteCompleteCallback(const WriteCompleteCallback& cb)
-    {
-        writeCompleteCallback_ = cb;
-    }
+    void setWriteCompleteCallback(const WriteCompleteCallback& cb){writeCompleteCallback_ = cb;}
 
     void setThreadNum(int numThreads);
 private:
