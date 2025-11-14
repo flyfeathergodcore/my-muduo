@@ -175,7 +175,6 @@ void TcpConnection::send(mymuduo::MyBuffer* buf) {
                 data.c_str(),
                 data.size()
             ));
-             buf->retrieveAll();
         }
     }
 }
