@@ -43,6 +43,7 @@ private:
 };
 
 int main(){
+    Logger::instance().setLogLevel(ERROR);
     EventLoop loop;
     InetAddress listenAddr("127.0.0.1",8000);
     Echoserver server(&loop,listenAddr,"Echoserver");

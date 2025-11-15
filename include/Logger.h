@@ -1,74 +1,59 @@
 #pragma once
-
 #include <string>
-
+#include <stdarg.h>
+#include <cstring>
 #include "nocopyable.h"
 
-// LOG_INFO("%s %d", arg1, arg2)
-#define LOG_INFO(logmsgFormat, ...) \
-    do \
-    { \
-        Logger &logger = Logger::instance(); \
-        logger.setLogLevel(INFO); \
-        char buf[1024] = {0}; \
-        snprintf(buf, 1024, logmsgFormat, ##__VA_ARGS__); \
-        logger.log(buf); \
-    } while(0) 
+class AsyncLogging;
 
-#define LOG_ERROR(logmsgFormat, ...) \
-    do \
-    { \
-        Logger &logger = Logger::instance(); \
-        logger.setLogLevel(ERROR); \
-        char buf[1024] = {0}; \
-        snprintf(buf, 1024, logmsgFormat, ##__VA_ARGS__); \
-        logger.log(buf); \
-    } while(0) 
+enum LogLevel { INFO, ERROR, FATAL, DEBUG };
 
-#define LOG_FATAL(logmsgFormat, ...) \
-    do \
-    { \
-        Logger &logger = Logger::instance(); \
-        logger.setLogLevel(FATAL); \
-        char buf[1024] = {0}; \
-        snprintf(buf, 1024, logmsgFormat, ##__VA_ARGS__); \
-        logger.log(buf); \
-        exit(-1); \
-    } while(0) 
+class Logger : nocopyable {
+public:
+    static Logger& instance();
+
+    void setLogLevel(LogLevel level) { logLevel_ = level; }
+    LogLevel logLevel() const { return logLevel_; }
+
+    void setAsyncLogger(AsyncLogging* async) { async_ = async; }
+
+    void log(const char* msg);
+    void logf(LogLevel level, const char* fmt, ...);
+
+private:
+    Logger() : logLevel_(INFO), async_(nullptr) {}
+
+private:
+    LogLevel logLevel_;
+    AsyncLogging* async_;
+};
+
+
+// ---- 宏 ----
+#define LOG_INFO(fmt, ...) \
+    do { \
+        if (Logger::instance().logLevel() <= INFO) \
+            Logger::instance().logf(INFO, fmt, ##__VA_ARGS__); \
+    } while (0)
+
+#define LOG_ERROR(fmt, ...) \
+    do { \
+        if (Logger::instance().logLevel() <= ERROR) \
+            Logger::instance().logf(ERROR, fmt, ##__VA_ARGS__); \
+    } while (0)
+
+#define LOG_FATAL(fmt, ...) \
+    do { \
+        Logger::instance().logf(FATAL, fmt, ##__VA_ARGS__); \
+        exit(1); \
+    } while (0)
 
 #ifdef MUDEBUG
-#define LOG_DEBUG(logmsgFormat, ...) \
-    do \
-    { \
-        Logger &logger = Logger::instance(); \
-        logger.setLogLevel(DEBUG); \
-        char buf[1024] = {0}; \
-        snprintf(buf, 1024, logmsgFormat, ##__VA_ARGS__); \
-        logger.log(buf); \
-    } while(0) 
+#define LOG_DEBUG(fmt, ...) \
+    do { \
+        if (Logger::instance().logLevel() <= DEBUG) \
+            Logger::instance().logf(DEBUG, fmt, ##__VA_ARGS__); \
+    } while (0)
 #else
-    #define LOG_DEBUG(logmsgFormat, ...)
+#define LOG_DEBUG(...)
 #endif
-
-// 定义日志的级别  INFO  ERROR  FATAL  DEBUG 
-enum LogLevel
-{
-    INFO,  // 普通信息
-    ERROR, // 错误信息
-    FATAL, // core信息
-    DEBUG, // 调试信息
-};
-
-// 输出一个日志类
-class Logger : nocopyable
-{
-public:
-    // 获取日志唯一的实例对象
-    static Logger& instance();
-    // 设置日志级别
-    void setLogLevel(int level);
-    // 写日志
-    void log(std::string msg);
-private:
-    int logLevel_;
-};

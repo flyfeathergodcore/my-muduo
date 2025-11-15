@@ -1,42 +1,28 @@
 #include "Logger.h"
-#include "Timestamp.h"
+#include "AsyncLogging.h"
+#include <stdio.h>
 
-#include <iostream>
-
-// 获取日志唯一的实例对象
-Logger& Logger::instance()
-{
+Logger& Logger::instance() {
     static Logger logger;
     return logger;
 }
 
-// 设置日志级别
-void Logger::setLogLevel(int level)
-{
-    logLevel_ = level;
+void Logger::log(const char* msg) {
+    if (async_) {
+        async_->append(msg, strlen(msg));
+    } else {
+        fputs(msg, stdout);
+        fputc('\n', stdout);
+    }
 }
 
-// 写日志  [级别信息] time : msg
-void Logger::log(std::string msg)
-{
-    switch (logLevel_)
-    {
-    case INFO:
-        std::cout << "[INFO]";
-        break;
-    case ERROR:
-        std::cout << "[ERROR]";
-        break;
-    case FATAL:
-        std::cout << "[FATAL]";
-        break;
-    case DEBUG:
-        std::cout << "[DEBUG]";
-        break;
-    default:
-        break;
-    }
+void Logger::logf(LogLevel level, const char* fmt, ...) {
+    char buf[1024];
 
-    // 打印时间和msg
-    std::cout << Timestamp::now().toString() << " : " << msg << std::endl;
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+
+    log(buf);
 }
