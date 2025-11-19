@@ -34,15 +34,31 @@ ssize_t mymuduo::MyBuffer::readFd(int fd, int *savedErrno)
     return n;
 }
 
-ssize_t mymuduo::MyBuffer::writeFd(int fd, int *savedErrno)
+ssize_t mymuduo::MyBuffer::writeFd(int fd, int* savedErrno)
 {
-    size_t n = readableBytes();
-    ssize_t nwritten = ::write(fd, peek(), n);
-    if (nwritten < 0)
+    ssize_t n = 0;
+    size_t toWrite = readableBytes();
+
+    while (toWrite > 0)
     {
-        *savedErrno = errno;
+        n = ::write(fd, peek(), toWrite);
+
+        if (n > 0) {
+            readerIndex_ += n;
+            toWrite -= n;
+        } else {
+            if (errno == EINTR)
+                continue;
+
+            if (errno == EAGAIN) {
+                *savedErrno = EAGAIN;
+                break;          // 等待 EPOLLOUT 下一次触发
+            }
+
+            *savedErrno = errno;
+            return -1;         // 其他错误
+        }
     }
 
-    readerIndex_ += nwritten;
-    return nwritten;
+    return n;
 }

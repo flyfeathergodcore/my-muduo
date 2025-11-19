@@ -67,9 +67,11 @@ void TcpConnection::handleRead(Timestamp receiveTime) {
 void TcpConnection::handleWrite() {
     if (channel_->isWriting()) {
         int savedErrno = 0;
-        ssize_t n = outputBuffer_.writeFd(channel_->fd(),&savedErrno);
-        if (n > 0) {
-            outputBuffer_.retrieve(n);
+        ssize_t n = outputBuffer_.writeFd(channel_->fd(), &savedErrno);
+
+        if (n >= 0) {
+            // writeFd 已经内部 retrieve 了，不要再 retrieve(n)
+
             if (outputBuffer_.readableBytes() == 0) {
                 channel_->disableWriting();
                 if (writeCompleteCallback_) {
@@ -80,12 +82,15 @@ void TcpConnection::handleWrite() {
                 }
             }
         } else {
-            LOG_ERROR("TcpConnection::handleWrite() - error on fd %d", channel_->fd());
+            if (savedErrno != EAGAIN) {
+                LOG_ERROR("TcpConnection::handleWrite() - error on fd %d", channel_->fd());
+            }
         }
     } else {
         LOG_ERROR("TcpConnection::handleWrite() - fd %d is not writing", channel_->fd());
     }
 }
+
 
 void TcpConnection::handleClose() {
     LOG_INFO("TcpConnection::handleClose() - connection [%s] is closing", name_.c_str());
